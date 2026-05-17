@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>我的动漫排行</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f3ed;
+      --panel: #ffffff;
+      --panel-soft: #faf9f5;
+      --text: #1d2430;
+      --muted: #657080;
+      --line: #ddd8cc;
+      --teal: #0f766e;
+      --teal-dark: #115e59;
+      --blue: #2563eb;
+      --red: #b42318;
+      --shadow: 0 16px 40px rgba(29, 36, 48, 0.08);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button,
+    input {
+      font: inherit;
+      letter-spacing: 0;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.52;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 42px;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.08;
+      font-weight: 800;
+    }
+
+    .title-block p {
+      max-width: 680px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .count-pill {
+      min-width: 120px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .count-pill strong {
+      display: block;
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .count-pill span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(330px, 390px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-soft);
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .panel-header .subtle {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .search-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      padding: 16px 18px 12px;
+    }
+
+    .search-input {
+      width: 100%;
+      min-width: 0;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0 12px;
+      color: var(--text);
+      background: #fff;
+      outline: 0;
+    }
+
+    .search-input:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+    }
+
+    .primary-btn,
+    .ghost-btn,
+    .danger-btn,
+    .icon-btn {
+      min-height: 40px;
+      border-radius: var(--radius);
+      font-weight: 700;
+      transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease;
+    }
+
+    .primary-btn {
+      padding: 0 16px;
+      background: var(--teal);
+      color: #fff;
+    }
+
+    .primary-btn:hover:not(:disabled) {
+      background: var(--teal-dark);
+    }
+
+    .ghost-btn {
+      border: 1px solid var(--line);
+      padding: 0 12px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .ghost-btn:hover:not(:disabled) {
+      border-color: var(--teal);
+      color: var(--teal-dark);
+    }
+
+    .danger-btn {
+      border: 1px solid rgba(180, 35, 24, 0.3);
+      padding: 0 12px;
+      background: #fff;
+      color: var(--red);
+    }
+
+    .danger-btn:hover:not(:disabled) {
+      background: #fff4f2;
+    }
+
+    .icon-btn {
+      width: 38px;
+      min-width: 38px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .icon-btn:hover:not(:disabled) {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .status {
+      min-height: 24px;
+      padding: 0 18px 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .results {
+      display: grid;
+      gap: 10px;
+      max-height: 610px;
+      overflow: auto;
+      padding: 0 18px 18px;
+    }
+
+    .result-card,
+    .rank-card {
+      display: grid;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+
+    .result-card {
+      grid-template-columns: 72px minmax(0, 1fr);
+      padding: 10px;
+    }
+
+    .cover {
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      border-radius: 6px;
+      background: #e6e0d5;
+      object-fit: cover;
+      display: block;
+    }
+
+    .result-info,
+    .rank-info {
+      min-width: 0;
+    }
+
+    .anime-title {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.35;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .anime-meta {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .result-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .source-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 0 9px;
+      background: #eef6f4;
+      color: var(--teal-dark);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .rank-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+
+    .rank-list {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      min-height: 240px;
+    }
+
+    .rank-card {
+      grid-template-columns: 58px 92px minmax(0, 1fr) auto;
+      align-items: center;
+      padding: 12px;
+      transition: border-color 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+    }
+
+    .rank-card.dragging {
+      opacity: 0.5;
+    }
+
+    .rank-card.drop-target {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+    }
+
+    .rank-number {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: var(--radius);
+      background: #1f2937;
+      color: #fff;
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .rank-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .empty-state {
+      display: grid;
+      place-items: center;
+      min-height: 220px;
+      border: 1px dashed #c8c0b2;
+      border-radius: var(--radius);
+      color: var(--muted);
+      text-align: center;
+      padding: 24px;
+      line-height: 1.6;
+      background: var(--panel-soft);
+    }
+
+    .empty-state strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--text);
+      font-size: 17px;
+    }
+
+    @media (max-width: 880px) {
+      .page {
+        width: min(100% - 24px, 700px);
+        padding-top: 18px;
+      }
+
+      .app-header {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .count-pill {
+        width: 100%;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .results {
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .search-form {
+        grid-template-columns: 1fr;
+      }
+
+      .primary-btn {
+        width: 100%;
+      }
+
+      .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .panel-header .subtle {
+        white-space: normal;
+      }
+
+      .rank-card {
+        grid-template-columns: 48px 76px minmax(0, 1fr);
+      }
+
+      .rank-number {
+        width: 40px;
+        height: 40px;
+      }
+
+      .rank-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="app-header">
+      <div class="title-block">
+        <h1>我的动漫排行</h1>
+        <p>搜索动漫后加入榜单，封面会从线上条目库获取；排名顺序会自动保存在这个浏览器里。</p>
+      </div>
+      <div class="count-pill" aria-live="polite">
+        <strong id="animeCount">0</strong>
+        <span>已收录</span>
+      </div>
+    </header>
+
+    <section class="workspace" aria-label="动漫排行工作区">
+      <aside class="panel" aria-label="搜索动漫">
+        <div class="panel-header">
+          <h2>添加动漫</h2>
+          <span class="subtle">Bangumi + AniList</span>
+        </div>
+
+        <form class="search-form" id="searchForm">
+          <input
+            class="search-input"
+            id="searchInput"
+            type="search"
+            placeholder="输入动漫名"
+            autocomplete="off"
+            aria-label="动漫名"
+          >
+          <button class="primary-btn" id="searchButton" type="submit">搜索</button>
+        </form>
+
+        <div class="status" id="searchStatus" aria-live="polite">输入名称后开始检索。</div>
+        <div class="results" id="results" aria-label="搜索结果"></div>
+      </aside>
+
+      <section class="panel" aria-label="动漫排名">
+        <div class="panel-header">
+          <h2>排名</h2>
+          <span class="subtle" id="savedAt">未保存</span>
+        </div>
+        <div class="rank-toolbar">
+          <button class="ghost-btn" id="exportButton" type="button">导出数据</button>
+          <button class="danger-btn" id="clearButton" type="button">清空榜单</button>
+        </div>
+        <div class="rank-list" id="rankList"></div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "watchedAnimeRanking.v1";
+    const BANGUMI_SEARCH_URL = "https://api.bgm.tv/v0/search/subjects";
+    const ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
+
+    const state = {
+      list: loadList(),
+      results: [],
+      activeDragId: null,
+      lastSavedAt: null
+    };
+
+    const elements = {
+      animeCount: document.querySelector("#animeCount"),
+      clearButton: document.querySelector("#clearButton"),
+      exportButton: document.querySelector("#exportButton"),
+      rankList: document.querySelector("#rankList"),
+      results: document.querySelector("#results"),
+      savedAt: document.querySelector("#savedAt"),
+      searchButton: document.querySelector("#searchButton"),
+      searchForm: document.querySelector("#searchForm"),
+      searchInput: document.querySelector("#searchInput"),
+      searchStatus: document.querySelector("#searchStatus")
+    };
+
+    elements.searchForm.addEventListener("submit", handleSearch);
+    elements.clearButton.addEventListener("click", clearRanking);
+    elements.exportButton.addEventListener("click", exportRanking);
+
+    renderRanking();
+    updateSavedAt();
+
+    function loadList() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return [];
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+      } catch (error) {
+        console.warn("Unable to read saved ranking", error);
+        return [];
+      }
+    }
+
+    function saveList() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.list));
+      state.lastSavedAt = new Date();
+      updateSavedAt();
+    }
+
+    function updateSavedAt() {
+      if (state.lastSavedAt) {
+        const time = new Intl.DateTimeFormat("zh-CN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        }).format(state.lastSavedAt);
+        elements.savedAt.textContent = `已保存 ${time}`;
+      } else if (state.list.length) {
+        elements.savedAt.textContent = "已载入本地数据";
+      } else {
+        elements.savedAt.textContent = "等待添加";
+      }
+    }
+
+    async function handleSearch(event) {
+      event.preventDefault();
+
+      const keyword = elements.searchInput.value.trim();
+      if (!keyword) {
+        setStatus("请输入动漫名。");
+        elements.searchInput.focus();
+        return;
+      }
+
+      elements.searchButton.disabled = true;
+      elements.searchButton.textContent = "检索中";
+      setStatus("正在检索线上条目和封面。");
+      elements.results.innerHTML = "";
+
+      try {
+        const results = await searchAnime(keyword);
+        state.results = results;
+        renderResults(results);
+        setStatus(results.length ? `找到 ${results.length} 个结果。` : "没有找到结果，换一个名称再试。");
+      } catch (error) {
+        console.error(error);
+        state.results = [];
+        elements.results.innerHTML = "";
+        setStatus("检索失败，请稍后重试。");
+      } finally {
+        elements.searchButton.disabled = false;
+        elements.searchButton.textContent = "搜索";
+      }
+    }
+
+    async function searchAnime(keyword) {
+      const searches = await Promise.allSettled([
+        fetchBangumi(keyword),
+        fetchAniList(keyword)
+      ]);
+
+      const merged = [];
+      const seen = new Set();
+
+      for (const result of searches) {
+        if (result.status !== "fulfilled") continue;
+        for (const item of result.value) {
+          if (!item.image || seen.has(item.id)) continue;
+          seen.add(item.id);
+          merged.push(item);
+        }
+      }
+
+      return merged.slice(0, 12);
+    }
+
+    async function fetchBangumi(keyword) {
+      const url = `${BANGUMI_SEARCH_URL}?limit=8&offset=0`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          keyword,
+          sort: "match",
+          filter: {
+            type: [2]
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Bangumi search failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const list = Array.isArray(data.data) ? data.data : [];
+
+      return list.map((item) => {
+        const image = normalizeUrl(item.images?.large || item.images?.common || item.images?.medium || item.images?.grid);
+        const title = item.name_cn || item.name || "未命名动漫";
+        const subtitle = item.name_cn && item.name_cn !== item.name ? item.name : "";
+        return {
+          id: `bangumi-${item.id}`,
+          sourceId: String(item.id),
+          source: "Bangumi",
+          title,
+          subtitle,
+          image,
+          siteUrl: `https://bgm.tv/subject/${item.id}`,
+          meta: [item.date, item.eps ? `${item.eps} 集` : ""].filter(Boolean).join(" · ")
+        };
+      });
+    }
+
+    async function fetchAniList(keyword) {
+      const query = `
+        query ($search: String) {
+          Page(page: 1, perPage: 8) {
+            media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
+              id
+              title {
+                romaji
+                english
+                native
+              }
+              coverImage {
+                large
+              }
+              startDate {
+                year
+              }
+              format
+              episodes
+              siteUrl
+            }
+          }
+        }
+      `;
+
+      const response = await fetch(ANILIST_GRAPHQL_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          query,
+          variables: { search: keyword }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`AniList search failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const media = data?.data?.Page?.media || [];
+
+      return media.map((item) => {
+        const title = item.title?.english || item.title?.romaji || item.title?.native || "Untitled Anime";
+        const subtitle = item.title?.native && item.title.native !== title ? item.title.native : "";
+        return {
+          id: `anilist-${item.id}`,
+          sourceId: String(item.id),
+          source: "AniList",
+          title,
+          subtitle,
+          image: item.coverImage?.large || "",
+          siteUrl: item.siteUrl || `https://anilist.co/anime/${item.id}`,
+          meta: [item.startDate?.year, item.format, item.episodes ? `${item.episodes} 集` : ""].filter(Boolean).join(" · ")
+        };
+      });
+    }
+
+    function normalizeUrl(url) {
+      if (!url || typeof url !== "string") return "";
+      return url.replace(/^http:\/\//i, "https://");
+    }
+
+    function renderResults(results) {
+      elements.results.innerHTML = "";
+
+      if (!results.length) {
+        return;
+      }
+
+      for (const item of results) {
+        const card = document.createElement("article");
+        card.className = "result-card";
+
+        const img = document.createElement("img");
+        img.className = "cover";
+        img.src = item.image;
+        img.alt = `${item.title} 封面`;
+        img.loading = "lazy";
+        img.referrerPolicy = "no-referrer";
+
+        const info = document.createElement("div");
+        info.className = "result-info";
+
+        const title = document.createElement("h3");
+        title.className = "anime-title";
+        title.textContent = item.title;
+
+        const meta = document.createElement("p");
+        meta.className = "anime-meta";
+        meta.textContent = [item.subtitle, item.meta].filter(Boolean).join(" · ");
+
+        const actions = document.createElement("div");
+        actions.className = "result-actions";
+
+        const source = document.createElement("span");
+        source.className = "source-tag";
+        source.textContent = item.source;
+
+        const button = document.createElement("button");
+        button.className = "ghost-btn";
+        button.type = "button";
+        button.textContent = hasAnime(item.id) ? "已添加" : "加入";
+        button.disabled = hasAnime(item.id);
+        button.addEventListener("click", () => addAnime(item));
+
+        actions.append(source, button);
+        info.append(title, meta, actions);
+        card.append(img, info);
+        elements.results.append(card);
+      }
+    }
+
+    function renderRanking() {
+      elements.animeCount.textContent = String(state.list.length);
+      elements.clearButton.disabled = state.list.length === 0;
+      elements.exportButton.disabled = state.list.length === 0;
+      elements.rankList.innerHTML = "";
+
+      if (!state.list.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.innerHTML = "<div><strong>榜单为空</strong><span>从左侧搜索结果加入动漫。</span></div>";
+        elements.rankList.append(empty);
+        return;
+      }
+
+      state.list.forEach((item, index) => {
+        const card = document.createElement("article");
+        card.className = "rank-card";
+        card.draggable = true;
+        card.dataset.id = item.uid;
+
+        card.addEventListener("dragstart", handleDragStart);
+        card.addEventListener("dragover", handleDragOver);
+        card.addEventListener("dragleave", handleDragLeave);
+        card.addEventListener("drop", handleDrop);
+        card.addEventListener("dragend", handleDragEnd);
+
+        const rank = document.createElement("div");
+        rank.className = "rank-number";
+        rank.textContent = `#${index + 1}`;
+
+        const img = document.createElement("img");
+        img.className = "cover";
+        img.src = item.image;
+        img.alt = `${item.title} 封面`;
+        img.loading = "lazy";
+        img.referrerPolicy = "no-referrer";
+
+        const info = document.createElement("div");
+        info.className = "rank-info";
+
+        const title = document.createElement("h3");
+        title.className = "anime-title";
+        title.textContent = item.title;
+
+        const meta = document.createElement("p");
+        meta.className = "anime-meta";
+        meta.textContent = [item.subtitle, item.source].filter(Boolean).join(" · ");
+
+        info.append(title, meta);
+
+        const actions = document.createElement("div");
+        actions.className = "rank-actions";
+
+        const upButton = makeIconButton("↑", "上移", () => moveAnime(index, index - 1), index === 0);
+        const downButton = makeIconButton("↓", "下移", () => moveAnime(index, index + 1), index === state.list.length - 1);
+        const renameButton = makeTextButton("改名", () => renameAnime(index));
+        const removeButton = makeTextButton("删除", () => removeAnime(index), "danger-btn");
+
+        actions.append(upButton, downButton, renameButton, removeButton);
+        card.append(rank, img, info, actions);
+        elements.rankList.append(card);
+      });
+    }
+
+    function makeIconButton(text, label, action, disabled) {
+      const button = document.createElement("button");
+      button.className = "icon-btn";
+      button.type = "button";
+      button.textContent = text;
+      button.title = label;
+      button.setAttribute("aria-label", label);
+      button.disabled = Boolean(disabled);
+      button.addEventListener("click", action);
+      return button;
+    }
+
+    function makeTextButton(text, action, className = "ghost-btn") {
+      const button = document.createElement("button");
+      button.className = className;
+      button.type = "button";
+      button.textContent = text;
+      button.addEventListener("click", action);
+      return button;
+    }
+
+    function addAnime(item) {
+      if (hasAnime(item.id)) return;
+
+      state.list.push({
+        ...item,
+        uid: makeUid(),
+        addedAt: new Date().toISOString()
+      });
+
+      saveList();
+      renderRanking();
+      renderResults(state.results);
+      setStatus(`已加入：${item.title}`);
+    }
+
+    function hasAnime(id) {
+      return state.list.some((item) => item.id === id);
+    }
+
+    function moveAnime(fromIndex, toIndex) {
+      if (toIndex < 0 || toIndex >= state.list.length || fromIndex === toIndex) return;
+
+      const [item] = state.list.splice(fromIndex, 1);
+      state.list.splice(toIndex, 0, item);
+      saveList();
+      renderRanking();
+    }
+
+    function renameAnime(index) {
+      const item = state.list[index];
+      const nextTitle = window.prompt("新的动漫名", item.title);
+      if (!nextTitle || !nextTitle.trim()) return;
+
+      item.title = nextTitle.trim();
+      saveList();
+      renderRanking();
+    }
+
+    function removeAnime(index) {
+      const item = state.list[index];
+      if (!window.confirm(`删除「${item.title}」？`)) return;
+
+      state.list.splice(index, 1);
+      saveList();
+      renderRanking();
+      renderResults(state.results);
+    }
+
+    function clearRanking() {
+      if (!state.list.length) return;
+      if (!window.confirm("清空整个榜单？")) return;
+
+      state.list = [];
+      saveList();
+      renderRanking();
+      renderResults(state.results);
+    }
+
+    async function exportRanking() {
+      const payload = JSON.stringify(state.list, null, 2);
+
+      try {
+        await navigator.clipboard.writeText(payload);
+        elements.savedAt.textContent = "已复制导出数据";
+      } catch (error) {
+        console.warn("Clipboard unavailable", error);
+        const blob = new Blob([payload], { type: "application/json" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "anime-ranking.json";
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }
+    }
+
+    function handleDragStart(event) {
+      state.activeDragId = event.currentTarget.dataset.id;
+      event.currentTarget.classList.add("dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", state.activeDragId);
+    }
+
+    function handleDragOver(event) {
+      event.preventDefault();
+      const target = event.currentTarget;
+      if (target.dataset.id !== state.activeDragId) {
+        target.classList.add("drop-target");
+      }
+    }
+
+    function handleDragLeave(event) {
+      event.currentTarget.classList.remove("drop-target");
+    }
+
+    function handleDrop(event) {
+      event.preventDefault();
+      const targetId = event.currentTarget.dataset.id;
+      event.currentTarget.classList.remove("drop-target");
+
+      if (!state.activeDragId || state.activeDragId === targetId) return;
+
+      const fromIndex = state.list.findIndex((item) => item.uid === state.activeDragId);
+      const toIndex = state.list.findIndex((item) => item.uid === targetId);
+      moveAnime(fromIndex, toIndex);
+    }
+
+    function handleDragEnd() {
+      state.activeDragId = null;
+      document.querySelectorAll(".rank-card").forEach((card) => {
+        card.classList.remove("dragging", "drop-target");
+      });
+    }
+
+    function makeUid() {
+      if (window.crypto?.randomUUID) {
+        return window.crypto.randomUUID();
+      }
+
+      return `anime-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function setStatus(message) {
+      elements.searchStatus.textContent = message;
+    }
+  </script>
+</body>
+</html>
