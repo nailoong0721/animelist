@@ -35,7 +35,8 @@
     }
 
     button,
-    input {
+    input,
+    textarea {
       font: inherit;
       letter-spacing: 0;
     }
@@ -117,6 +118,13 @@
       overflow: hidden;
     }
 
+    .search-panel {
+      position: sticky;
+      top: 16px;
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+    }
+
     .panel-header {
       display: flex;
       align-items: center;
@@ -146,19 +154,34 @@
       padding: 16px 18px 12px;
     }
 
-    .search-input {
+    .search-input,
+    .batch-input,
+    .rank-search {
       width: 100%;
       min-width: 0;
-      height: 44px;
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      padding: 0 12px;
       color: var(--text);
       background: #fff;
       outline: 0;
     }
 
-    .search-input:focus {
+    .search-input,
+    .rank-search {
+      height: 44px;
+      padding: 0 12px;
+    }
+
+    .batch-input {
+      min-height: 112px;
+      padding: 10px 12px;
+      line-height: 1.5;
+      resize: vertical;
+    }
+
+    .search-input:focus,
+    .batch-input:focus,
+    .rank-search:focus {
       border-color: var(--teal);
       box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
     }
@@ -227,6 +250,21 @@
       color: var(--muted);
       font-size: 13px;
       line-height: 1.5;
+    }
+
+    .batch-box {
+      display: grid;
+      gap: 10px;
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-soft);
+    }
+
+    .field-label {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 800;
     }
 
     .results {
@@ -308,6 +346,17 @@
       padding: 14px 18px;
       border-bottom: 1px solid var(--line);
       flex-wrap: wrap;
+    }
+
+    .rank-search {
+      flex: 1 1 220px;
+    }
+
+    .toolbar-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin-left: auto;
+      white-space: nowrap;
     }
 
     .rank-list {
@@ -392,6 +441,11 @@
         grid-template-columns: 1fr;
       }
 
+      .search-panel {
+        position: static;
+        max-height: none;
+      }
+
       .results {
         max-height: none;
       }
@@ -402,7 +456,9 @@
         grid-template-columns: 1fr;
       }
 
-      .primary-btn {
+      .primary-btn,
+      .batch-box .ghost-btn,
+      .rank-search {
         width: 100%;
       }
 
@@ -428,6 +484,11 @@
         grid-column: 1 / -1;
         justify-content: flex-start;
       }
+
+      .toolbar-note {
+        width: 100%;
+        margin-left: 0;
+      }
     }
   </style>
 </head>
@@ -445,7 +506,7 @@
     </header>
 
     <section class="workspace" aria-label="动漫排行工作区">
-      <aside class="panel" aria-label="搜索动漫">
+      <aside class="panel search-panel" aria-label="搜索动漫">
         <div class="panel-header">
           <h2>添加动漫</h2>
           <span class="subtle">Bangumi + AniList</span>
@@ -464,6 +525,16 @@
         </form>
 
         <div class="status" id="searchStatus" aria-live="polite">输入名称后开始检索。</div>
+        <div class="batch-box">
+          <label class="field-label" for="batchInput">批量添加</label>
+          <textarea
+            class="batch-input"
+            id="batchInput"
+            placeholder="每行一个动漫名，例如&#10;进击的巨人&#10;钢之炼金术师"
+            aria-label="批量添加动漫名"
+          ></textarea>
+          <button class="ghost-btn" id="batchButton" type="button">批量检索并加入</button>
+        </div>
         <div class="results" id="results" aria-label="搜索结果"></div>
       </aside>
 
@@ -473,8 +544,17 @@
           <span class="subtle" id="savedAt">未保存</span>
         </div>
         <div class="rank-toolbar">
+          <input
+            class="rank-search"
+            id="rankSearchInput"
+            type="search"
+            placeholder="搜索已加入动漫"
+            autocomplete="off"
+            aria-label="搜索已加入动漫"
+          >
           <button class="ghost-btn" id="exportButton" type="button">导出数据</button>
           <button class="danger-btn" id="clearButton" type="button">清空榜单</button>
+          <span class="toolbar-note" id="rankSearchCount"></span>
         </div>
         <div class="rank-list" id="rankList"></div>
       </section>
@@ -490,14 +570,21 @@
       list: loadList(),
       results: [],
       activeDragId: null,
+      replaceSearchArmed: false,
+      replacingIndex: null,
+      rankQuery: "",
       lastSavedAt: null
     };
 
     const elements = {
       animeCount: document.querySelector("#animeCount"),
+      batchButton: document.querySelector("#batchButton"),
+      batchInput: document.querySelector("#batchInput"),
       clearButton: document.querySelector("#clearButton"),
       exportButton: document.querySelector("#exportButton"),
       rankList: document.querySelector("#rankList"),
+      rankSearchCount: document.querySelector("#rankSearchCount"),
+      rankSearchInput: document.querySelector("#rankSearchInput"),
       results: document.querySelector("#results"),
       savedAt: document.querySelector("#savedAt"),
       searchButton: document.querySelector("#searchButton"),
@@ -507,8 +594,10 @@
     };
 
     elements.searchForm.addEventListener("submit", handleSearch);
+    elements.batchButton.addEventListener("click", handleBatchAdd);
     elements.clearButton.addEventListener("click", clearRanking);
     elements.exportButton.addEventListener("click", exportRanking);
+    elements.rankSearchInput.addEventListener("input", handleRankSearch);
 
     renderRanking();
     updateSavedAt();
@@ -556,6 +645,16 @@
         return;
       }
 
+      if (state.replaceSearchArmed) {
+        state.replaceSearchArmed = false;
+      } else {
+        state.replacingIndex = null;
+      }
+
+      await runSearch(keyword);
+    }
+
+    async function runSearch(keyword) {
       elements.searchButton.disabled = true;
       elements.searchButton.textContent = "检索中";
       setStatus("正在检索线上条目和封面。");
@@ -575,6 +674,77 @@
         elements.searchButton.disabled = false;
         elements.searchButton.textContent = "搜索";
       }
+    }
+
+    async function handleBatchAdd() {
+      const names = getBatchNames();
+      if (!names.length) {
+        setStatus("请输入要批量添加的动漫名。");
+        elements.batchInput.focus();
+        return;
+      }
+
+      elements.batchButton.disabled = true;
+      elements.searchButton.disabled = true;
+      elements.batchButton.textContent = "批量添加中";
+      state.replaceSearchArmed = false;
+      state.replacingIndex = null;
+      elements.results.innerHTML = "";
+
+      let added = 0;
+      let duplicated = 0;
+      const failed = [];
+
+      for (let index = 0; index < names.length; index += 1) {
+        const name = names[index];
+        setStatus(`正在处理 ${index + 1}/${names.length}：${name}`);
+
+        try {
+          const matches = await searchAnime(name);
+          const candidate = matches.find((item) => !hasAnime(item.id) && !hasSimilarAnime(item));
+
+          if (candidate) {
+            addAnime(candidate, { silent: true });
+            added += 1;
+          } else if (matches.length) {
+            duplicated += 1;
+          } else {
+            failed.push(name);
+          }
+        } catch (error) {
+          console.error(error);
+          failed.push(name);
+        }
+      }
+
+      saveList();
+      renderRanking();
+      state.results = [];
+      renderResults(state.results);
+      elements.batchInput.value = failed.join("\n");
+
+      const messageParts = [`已新增 ${added} 部`];
+      if (duplicated) messageParts.push(`${duplicated} 部已在榜单中`);
+      if (failed.length) messageParts.push(`${failed.length} 部未找到，已留在批量输入框`);
+      setStatus(`${messageParts.join("，")}。`);
+
+      elements.batchButton.disabled = false;
+      elements.searchButton.disabled = false;
+      elements.batchButton.textContent = "批量检索并加入";
+    }
+
+    function getBatchNames() {
+      const names = elements.batchInput.value
+        .split(/\r?\n|[,，;；]/)
+        .map((name) => name.trim())
+        .filter(Boolean);
+
+      return [...new Set(names)];
+    }
+
+    function handleRankSearch(event) {
+      state.rankQuery = event.target.value.trim().toLowerCase();
+      renderRanking();
     }
 
     async function searchAnime(keyword) {
@@ -743,9 +913,21 @@
         const button = document.createElement("button");
         button.className = "ghost-btn";
         button.type = "button";
-        button.textContent = hasAnime(item.id) ? "已添加" : "加入";
-        button.disabled = hasAnime(item.id);
-        button.addEventListener("click", () => addAnime(item));
+        const isReplacing = state.replacingIndex !== null;
+
+        if (isReplacing) {
+          const alreadyInOtherRank = hasAnimeExcept(item.id, state.replacingIndex);
+          button.textContent = "替换";
+          button.disabled = isSameAnime(state.list[state.replacingIndex], item) || alreadyInOtherRank;
+          if (alreadyInOtherRank) {
+            button.textContent = "已在榜单";
+          }
+          button.addEventListener("click", () => replaceAnime(state.replacingIndex, item));
+        } else {
+          button.textContent = hasAnime(item.id) ? "已添加" : "加入";
+          button.disabled = hasAnime(item.id);
+          button.addEventListener("click", () => addAnime(item));
+        }
 
         actions.append(source, button);
         info.append(title, meta, actions);
@@ -758,9 +940,11 @@
       elements.animeCount.textContent = String(state.list.length);
       elements.clearButton.disabled = state.list.length === 0;
       elements.exportButton.disabled = state.list.length === 0;
+      elements.rankSearchInput.disabled = state.list.length === 0;
       elements.rankList.innerHTML = "";
 
       if (!state.list.length) {
+        elements.rankSearchCount.textContent = "";
         const empty = document.createElement("div");
         empty.className = "empty-state";
         empty.innerHTML = "<div><strong>榜单为空</strong><span>从左侧搜索结果加入动漫。</span></div>";
@@ -768,7 +952,18 @@
         return;
       }
 
-      state.list.forEach((item, index) => {
+      const visibleItems = getVisibleRanking();
+      elements.rankSearchCount.textContent = state.rankQuery ? `${visibleItems.length}/${state.list.length}` : "";
+
+      if (!visibleItems.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.innerHTML = "<div><strong>没有匹配结果</strong><span>换一个关键词搜索已加入动漫。</span></div>";
+        elements.rankList.append(empty);
+        return;
+      }
+
+      visibleItems.forEach(({ item, index }) => {
         const card = document.createElement("article");
         card.className = "rank-card";
         card.draggable = true;
@@ -800,7 +995,7 @@
 
         const meta = document.createElement("p");
         meta.className = "anime-meta";
-        meta.textContent = [item.subtitle, item.source].filter(Boolean).join(" · ");
+        meta.textContent = [item.subtitle, item.source, formatAddedAt(item.addedAt)].filter(Boolean).join(" · ");
 
         info.append(title, meta);
 
@@ -809,13 +1004,27 @@
 
         const upButton = makeIconButton("↑", "上移", () => moveAnime(index, index - 1), index === 0);
         const downButton = makeIconButton("↓", "下移", () => moveAnime(index, index + 1), index === state.list.length - 1);
-        const renameButton = makeTextButton("改名", () => renameAnime(index));
+        const renameButton = makeTextButton("重新搜索", () => startReplaceSearch(index));
         const removeButton = makeTextButton("删除", () => removeAnime(index), "danger-btn");
 
         actions.append(upButton, downButton, renameButton, removeButton);
         card.append(rank, img, info, actions);
         elements.rankList.append(card);
       });
+    }
+
+    function getVisibleRanking() {
+      if (!state.rankQuery) {
+        return state.list.map((item, index) => ({ item, index }));
+      }
+
+      return state.list
+        .map((item, index) => ({ item, index }))
+        .filter(({ item }) => {
+          return [item.title, item.subtitle, item.source]
+            .filter(Boolean)
+            .some((value) => value.toLowerCase().includes(state.rankQuery));
+        });
     }
 
     function makeIconButton(text, label, action, disabled) {
@@ -839,7 +1048,7 @@
       return button;
     }
 
-    function addAnime(item) {
+    function addAnime(item, options = {}) {
       if (hasAnime(item.id)) return;
 
       state.list.push({
@@ -848,14 +1057,55 @@
         addedAt: new Date().toISOString()
       });
 
-      saveList();
-      renderRanking();
-      renderResults(state.results);
-      setStatus(`已加入：${item.title}`);
+      if (!options.silent) {
+        saveList();
+        renderRanking();
+        renderResults(state.results);
+        setStatus(`已加入：${item.title}`);
+      }
     }
 
     function hasAnime(id) {
       return state.list.some((item) => item.id === id);
+    }
+
+    function hasAnimeExcept(id, ignoredIndex) {
+      return state.list.some((item, index) => index !== ignoredIndex && item.id === id);
+    }
+
+    function isSameAnime(current, nextItem) {
+      return Boolean(current && nextItem && current.id === nextItem.id);
+    }
+
+    function hasSimilarAnime(anime) {
+      const targetNames = getComparableNames(anime);
+      if (!targetNames.length) return false;
+
+      return state.list.some((item) => {
+        return getComparableNames(item).some((name) => targetNames.includes(name));
+      });
+    }
+
+    function getComparableNames(anime) {
+      return [anime.title, anime.subtitle]
+        .filter(Boolean)
+        .map((name) => name.toLowerCase().replace(/\s+/g, ""));
+    }
+
+    function formatAddedAt(value) {
+      if (!value) return "加入时间未记录";
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "加入时间未记录";
+
+      const text = new Intl.DateTimeFormat("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(date);
+      return `加入于 ${text}`;
     }
 
     function moveAnime(fromIndex, toIndex) {
@@ -863,18 +1113,51 @@
 
       const [item] = state.list.splice(fromIndex, 1);
       state.list.splice(toIndex, 0, item);
+      if (state.replacingIndex === fromIndex) {
+        state.replacingIndex = toIndex;
+      } else if (state.replacingIndex !== null) {
+        if (fromIndex < state.replacingIndex && toIndex >= state.replacingIndex) {
+          state.replacingIndex -= 1;
+        } else if (fromIndex > state.replacingIndex && toIndex <= state.replacingIndex) {
+          state.replacingIndex += 1;
+        }
+      }
       saveList();
       renderRanking();
     }
 
-    function renameAnime(index) {
+    function startReplaceSearch(index) {
       const item = state.list[index];
-      const nextTitle = window.prompt("新的动漫名", item.title);
-      if (!nextTitle || !nextTitle.trim()) return;
+      if (!item) return;
 
-      item.title = nextTitle.trim();
+      state.replacingIndex = index;
+      state.replaceSearchArmed = true;
+      elements.searchInput.value = item.title;
+      state.results = [];
+      renderResults(state.results);
+      setStatus(`正在替换第 ${index + 1} 名。输入新的动漫名后点击搜索。`);
+      elements.searchInput.focus();
+      elements.searchInput.select();
+    }
+
+    function replaceAnime(index, nextItem) {
+      const current = state.list[index];
+      if (!current || isSameAnime(current, nextItem)) return;
+      if (hasAnimeExcept(nextItem.id, index)) return;
+
+      state.list[index] = {
+        ...nextItem,
+        uid: current.uid || makeUid(),
+        addedAt: current.addedAt || new Date().toISOString(),
+        replacedAt: new Date().toISOString()
+      };
+
+      state.replacingIndex = null;
+      state.replaceSearchArmed = false;
       saveList();
       renderRanking();
+      renderResults(state.results);
+      setStatus(`第 ${index + 1} 名已替换为：${nextItem.title}`);
     }
 
     function removeAnime(index) {
@@ -882,6 +1165,12 @@
       if (!window.confirm(`删除「${item.title}」？`)) return;
 
       state.list.splice(index, 1);
+      if (state.replacingIndex === index) {
+        state.replacingIndex = null;
+        state.replaceSearchArmed = false;
+      } else if (state.replacingIndex !== null && state.replacingIndex > index) {
+        state.replacingIndex -= 1;
+      }
       saveList();
       renderRanking();
       renderResults(state.results);
@@ -892,23 +1181,27 @@
       if (!window.confirm("清空整个榜单？")) return;
 
       state.list = [];
+      state.replacingIndex = null;
+      state.replaceSearchArmed = false;
       saveList();
       renderRanking();
       renderResults(state.results);
     }
 
     async function exportRanking() {
-      const payload = JSON.stringify(state.list, null, 2);
+      const payload = state.list
+        .map((item, index) => `${index + 1}.${item.title}`)
+        .join("\n");
 
       try {
         await navigator.clipboard.writeText(payload);
-        elements.savedAt.textContent = "已复制导出数据";
+        elements.savedAt.textContent = "已复制纯文本榜单";
       } catch (error) {
         console.warn("Clipboard unavailable", error);
-        const blob = new Blob([payload], { type: "application/json" });
+        const blob = new Blob([payload], { type: "text/plain;charset=utf-8" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "anime-ranking.json";
+        link.download = "anime-ranking.txt";
         link.click();
         URL.revokeObjectURL(link.href);
       }
