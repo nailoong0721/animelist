@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>我的动漫排行</title>
+  <title>我的动漫 Tier 排行</title>
   <style>
     :root {
       color-scheme: light;
@@ -111,22 +111,24 @@
       justify-content: flex-end;
     }
 
-    .tier-link {
+    .home-link {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       min-height: 44px;
+      border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 0 14px;
-      background: #1f2937;
-      color: #fff;
+      background: #fff;
+      color: var(--text);
       font-weight: 800;
       text-decoration: none;
       box-shadow: var(--shadow);
     }
 
-    .tier-link:hover {
-      background: #111827;
+    .home-link:hover {
+      border-color: var(--teal);
+      color: var(--teal-dark);
     }
 
     .workspace {
@@ -387,9 +389,168 @@
 
     .rank-list {
       display: grid;
-      gap: 12px;
       padding: 18px;
       min-height: 240px;
+    }
+
+    .tier-board {
+      display: grid;
+      gap: 0;
+      border: 1px solid #111827;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #111827;
+    }
+
+    .unassigned-section {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+      padding: 14px;
+    }
+
+    .unassigned-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .unassigned-header span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .unassigned-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+      gap: 10px;
+      min-height: 108px;
+    }
+
+    .tier-row {
+      display: grid;
+      grid-template-columns: 118px minmax(0, 1fr);
+      min-height: 132px;
+      border-bottom: 1px solid #111827;
+      background: #f8fafc;
+    }
+
+    .tier-row:last-child {
+      border-bottom: 0;
+    }
+
+    .tier-label {
+      display: grid;
+      place-items: center;
+      padding: 12px;
+      color: #111827;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    .tier-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+      align-content: start;
+      gap: 10px;
+      min-height: 132px;
+      padding: 10px;
+      background: #f8fafc;
+    }
+
+    .tier-items.drop-target {
+      background: #edfdfb;
+      box-shadow: inset 0 0 0 3px rgba(15, 118, 110, 0.16);
+    }
+
+    .tier-empty {
+      align-self: center;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .tier-card {
+      position: relative;
+      display: grid;
+      gap: 6px;
+      align-content: start;
+      min-width: 0;
+      border: 1px solid rgba(17, 24, 39, 0.14);
+      border-radius: 6px;
+      background: #fff;
+      padding: 6px;
+      box-shadow: 0 8px 18px rgba(17, 24, 39, 0.08);
+    }
+
+    .tier-card.dragging {
+      opacity: 0.55;
+    }
+
+    .tier-card .cover {
+      border-radius: 4px;
+    }
+
+    .tier-title {
+      min-height: 32px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.32;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .tier-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .mini-btn {
+      min-height: 28px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .mini-btn:hover:not(:disabled) {
+      border-color: var(--teal);
+      color: var(--teal-dark);
+    }
+
+    .mini-btn.danger {
+      border-color: rgba(180, 35, 24, 0.3);
+      color: var(--red);
+    }
+
+    .tier-card-select {
+      width: 100%;
+      height: 30px;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+      outline: 0;
     }
 
     .rank-card {
@@ -467,7 +628,7 @@
         justify-content: stretch;
       }
 
-      .tier-link {
+      .home-link {
         flex: 1 1 auto;
       }
 
@@ -523,6 +684,18 @@
         width: 100%;
         margin-left: 0;
       }
+
+      .tier-row {
+        grid-template-columns: 86px minmax(0, 1fr);
+      }
+
+      .tier-label {
+        font-size: 16px;
+      }
+
+      .tier-items {
+        grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+      }
     }
   </style>
 </head>
@@ -530,11 +703,11 @@
   <main class="page">
     <header class="app-header">
       <div class="title-block">
-        <h1>我的动漫排行</h1>
-        <p>搜索动漫后加入榜单，封面会从线上条目库获取；排名顺序会自动保存在这个浏览器里。</p>
+        <h1>我的动漫 Tier 排行</h1>
+        <p>搜索动漫后先加入下方待放入区域，再拖入从夯到拉的分档榜单；分档顺序会自动保存在这个浏览器里。</p>
       </div>
       <div class="header-actions">
-        <a class="tier-link" href="tier.html">制作从夯到拉排行</a>
+        <a class="home-link" href="index.html">返回普通排行</a>
         <div class="count-pill" aria-live="polite">
           <strong id="animeCount">0</strong>
           <span>已收录</span>
@@ -575,9 +748,9 @@
         <div class="results" id="results" aria-label="搜索结果"></div>
       </aside>
 
-      <section class="panel" aria-label="动漫排名">
+      <section class="panel" aria-label="动漫分档排名">
         <div class="panel-header">
-          <h2>排名</h2>
+          <h2>从夯到拉</h2>
           <span class="subtle" id="savedAt">未保存</span>
         </div>
         <div class="rank-toolbar">
@@ -589,7 +762,7 @@
             autocomplete="off"
             aria-label="搜索已加入动漫"
           >
-          <button class="ghost-btn" id="exportButton" type="button">导出数据</button>
+          <button class="ghost-btn" id="exportButton" type="button">导出图片</button>
           <button class="danger-btn" id="clearButton" type="button">清空榜单</button>
           <span class="toolbar-note" id="rankSearchCount"></span>
         </div>
@@ -602,6 +775,16 @@
     const STORAGE_KEY = "watchedAnimeRanking.v1";
     const BANGUMI_SEARCH_URL = "https://api.bgm.tv/v0/search/subjects";
     const ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
+    const TIERS = [
+      { id: "hang", label: "夯完了", color: "#ff6b6b" },
+      { id: "god-plus", label: "神中神", color: "#ff9f43" },
+      { id: "god", label: "神", color: "#ffd166" },
+      { id: "top", label: "顶级", color: "#72dd8f" },
+      { id: "elite", label: "人上人", color: "#4dabf7" },
+      { id: "good", label: "良好", color: "#b197fc" }
+    ];
+    const UNASSIGNED_TIER = "unassigned";
+    const DEFAULT_TIER = UNASSIGNED_TIER;
 
     const state = {
       list: loadList(),
@@ -644,11 +827,25 @@
         const saved = localStorage.getItem(STORAGE_KEY);
         if (!saved) return [];
         const parsed = JSON.parse(saved);
-        return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+        return Array.isArray(parsed) ? parsed.filter(Boolean).map(normalizeAnimeItem) : [];
       } catch (error) {
         console.warn("Unable to read saved ranking", error);
         return [];
       }
+    }
+
+    function normalizeAnimeItem(item) {
+      return {
+        ...item,
+        uid: item.uid || makeUid(),
+        tier: getValidTierId(item.tier),
+        addedAt: item.addedAt || ""
+      };
+    }
+
+    function getValidTierId(value) {
+      if (value === UNASSIGNED_TIER) return UNASSIGNED_TIER;
+      return TIERS.some((tier) => tier.id === value) ? value : UNASSIGNED_TIER;
     }
 
     function saveList() {
@@ -980,74 +1177,76 @@
       elements.rankSearchInput.disabled = state.list.length === 0;
       elements.rankList.innerHTML = "";
 
-      if (!state.list.length) {
-        elements.rankSearchCount.textContent = "";
-        const empty = document.createElement("div");
-        empty.className = "empty-state";
-        empty.innerHTML = "<div><strong>榜单为空</strong><span>从左侧搜索结果加入动漫。</span></div>";
-        elements.rankList.append(empty);
-        return;
-      }
-
       const visibleItems = getVisibleRanking();
       elements.rankSearchCount.textContent = state.rankQuery ? `${visibleItems.length}/${state.list.length}` : "";
 
-      if (!visibleItems.length) {
-        const empty = document.createElement("div");
-        empty.className = "empty-state";
-        empty.innerHTML = "<div><strong>没有匹配结果</strong><span>换一个关键词搜索已加入动漫。</span></div>";
-        elements.rankList.append(empty);
-        return;
+      const board = document.createElement("div");
+      board.className = "tier-board";
+      board.id = "tierBoard";
+
+      for (const tier of TIERS) {
+        const row = document.createElement("section");
+        row.className = "tier-row";
+        row.dataset.tier = tier.id;
+
+        const label = document.createElement("div");
+        label.className = "tier-label";
+        label.style.background = tier.color;
+        label.textContent = tier.label;
+
+        const items = document.createElement("div");
+        items.className = "tier-items";
+        items.dataset.tier = tier.id;
+        items.addEventListener("dragover", handleTierDragOver);
+        items.addEventListener("dragleave", handleTierDragLeave);
+        items.addEventListener("drop", handleTierDrop);
+
+        const tierItems = visibleItems.filter(({ item }) => getValidTierId(item.tier) === tier.id);
+        if (!tierItems.length) {
+          const empty = document.createElement("div");
+          empty.className = "tier-empty";
+          empty.textContent = state.rankQuery ? "无匹配动漫" : "拖入或加入动漫";
+          items.append(empty);
+        } else {
+          for (const entry of tierItems) {
+            items.append(createTierCard(entry.item, entry.index));
+          }
+        }
+
+        row.append(label, items);
+        board.append(row);
       }
 
-      visibleItems.forEach(({ item, index }) => {
-        const card = document.createElement("article");
-        card.className = "rank-card";
-        card.draggable = true;
-        card.dataset.id = item.uid;
+      elements.rankList.append(board);
 
-        card.addEventListener("dragstart", handleDragStart);
-        card.addEventListener("dragover", handleDragOver);
-        card.addEventListener("dragleave", handleDragLeave);
-        card.addEventListener("drop", handleDrop);
-        card.addEventListener("dragend", handleDragEnd);
+      const unassignedItems = visibleItems.filter(({ item }) => getValidTierId(item.tier) === UNASSIGNED_TIER);
+      const unassigned = document.createElement("section");
+      unassigned.className = "unassigned-section";
 
-        const rank = document.createElement("div");
-        rank.className = "rank-number";
-        rank.textContent = `#${index + 1}`;
+      const header = document.createElement("div");
+      header.className = "unassigned-header";
+      header.innerHTML = `<strong>待放入榜单</strong><span>${unassignedItems.length} 部</span>`;
 
-        const img = document.createElement("img");
-        img.className = "cover";
-        img.src = item.image;
-        img.alt = `${item.title} 封面`;
-        img.loading = "lazy";
-        img.referrerPolicy = "no-referrer";
+      const items = document.createElement("div");
+      items.className = "unassigned-items";
+      items.dataset.tier = UNASSIGNED_TIER;
+      items.addEventListener("dragover", handleTierDragOver);
+      items.addEventListener("dragleave", handleTierDragLeave);
+      items.addEventListener("drop", handleTierDrop);
 
-        const info = document.createElement("div");
-        info.className = "rank-info";
+      if (!unassignedItems.length) {
+        const empty = document.createElement("div");
+        empty.className = "tier-empty";
+        empty.textContent = state.rankQuery ? "无匹配动漫" : "新加入的动漫会先出现在这里";
+        items.append(empty);
+      } else {
+        for (const entry of unassignedItems) {
+          items.append(createTierCard(entry.item, entry.index));
+        }
+      }
 
-        const title = document.createElement("h3");
-        title.className = "anime-title";
-        title.textContent = item.title;
-
-        const meta = document.createElement("p");
-        meta.className = "anime-meta";
-        meta.textContent = [item.subtitle, item.source, formatAddedAt(item.addedAt)].filter(Boolean).join(" · ");
-
-        info.append(title, meta);
-
-        const actions = document.createElement("div");
-        actions.className = "rank-actions";
-
-        const upButton = makeIconButton("↑", "上移", () => moveAnime(index, index - 1), index === 0);
-        const downButton = makeIconButton("↓", "下移", () => moveAnime(index, index + 1), index === state.list.length - 1);
-        const renameButton = makeTextButton("重新搜索", () => startReplaceSearch(index));
-        const removeButton = makeTextButton("删除", () => removeAnime(index), "danger-btn");
-
-        actions.append(upButton, downButton, renameButton, removeButton);
-        card.append(rank, img, info, actions);
-        elements.rankList.append(card);
-      });
+      unassigned.append(header, items);
+      elements.rankList.append(unassigned);
     }
 
     function getVisibleRanking() {
@@ -1062,6 +1261,55 @@
             .filter(Boolean)
             .some((value) => value.toLowerCase().includes(state.rankQuery));
         });
+    }
+
+    function createTierCard(item, index) {
+      const card = document.createElement("article");
+      card.className = "tier-card";
+      card.draggable = true;
+      card.dataset.id = item.uid;
+      card.dataset.index = String(index);
+
+      card.addEventListener("dragstart", handleDragStart);
+      card.addEventListener("dragend", handleDragEnd);
+
+      const img = document.createElement("img");
+      img.className = "cover";
+      img.src = item.image;
+      img.alt = `${item.title} 封面`;
+      img.loading = "lazy";
+      img.referrerPolicy = "no-referrer";
+
+      const title = document.createElement("div");
+      title.className = "tier-title";
+      title.textContent = item.title;
+      title.title = [item.title, formatAddedAt(item.addedAt)].filter(Boolean).join(" · ");
+
+      const select = document.createElement("select");
+      select.className = "tier-card-select";
+      select.setAttribute("aria-label", `移动 ${item.title} 到等级`);
+      const unassignedOption = document.createElement("option");
+      unassignedOption.value = UNASSIGNED_TIER;
+      unassignedOption.textContent = "待放入";
+      select.append(unassignedOption);
+      for (const tier of TIERS) {
+        const option = document.createElement("option");
+        option.value = tier.id;
+        option.textContent = tier.label;
+        select.append(option);
+      }
+      select.value = getValidTierId(item.tier);
+      select.addEventListener("change", () => moveAnimeToTier(index, select.value));
+
+      const actions = document.createElement("div");
+      actions.className = "tier-actions";
+
+      const replaceButton = makeMiniButton("重搜", () => startReplaceSearch(index));
+      const removeButton = makeMiniButton("删除", () => removeAnime(index), true);
+
+      actions.append(replaceButton, removeButton);
+      card.append(img, title, select, actions);
+      return card;
     }
 
     function makeIconButton(text, label, action, disabled) {
@@ -1085,11 +1333,21 @@
       return button;
     }
 
+    function makeMiniButton(text, action, danger = false) {
+      const button = document.createElement("button");
+      button.className = danger ? "mini-btn danger" : "mini-btn";
+      button.type = "button";
+      button.textContent = text;
+      button.addEventListener("click", action);
+      return button;
+    }
+
     function addAnime(item, options = {}) {
       if (hasAnime(item.id)) return;
 
       state.list.push({
         ...item,
+        tier: getValidTierId(options.tier || UNASSIGNED_TIER),
         uid: makeUid(),
         addedAt: new Date().toISOString()
       });
@@ -1145,6 +1403,15 @@
       return `加入于 ${text}`;
     }
 
+    function moveAnimeToTier(index, tierId) {
+      const item = state.list[index];
+      if (!item) return;
+
+      item.tier = getValidTierId(tierId);
+      saveList();
+      renderRanking();
+    }
+
     function moveAnime(fromIndex, toIndex) {
       if (toIndex < 0 || toIndex >= state.list.length || fromIndex === toIndex) return;
 
@@ -1184,6 +1451,7 @@
 
       state.list[index] = {
         ...nextItem,
+        tier: current.tier || DEFAULT_TIER,
         uid: current.uid || makeUid(),
         addedAt: current.addedAt || new Date().toISOString(),
         replacedAt: new Date().toISOString()
@@ -1226,21 +1494,186 @@
     }
 
     async function exportRanking() {
-      const payload = state.list
-        .map((item, index) => `${index + 1}.${item.title}`)
-        .join("\n");
-
       try {
-        await navigator.clipboard.writeText(payload);
-        elements.savedAt.textContent = "已复制纯文本榜单";
-      } catch (error) {
-        console.warn("Clipboard unavailable", error);
-        const blob = new Blob([payload], { type: "text/plain;charset=utf-8" });
+        elements.exportButton.disabled = true;
+        elements.exportButton.textContent = "导出中";
+        const blob = await buildTierImageBlob();
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "anime-ranking.txt";
+        link.download = "anime-tier-list.png";
         link.click();
         URL.revokeObjectURL(link.href);
+        elements.savedAt.textContent = "已导出图片";
+      } catch (error) {
+        console.error(error);
+        elements.savedAt.textContent = "图片导出失败";
+      } finally {
+        elements.exportButton.disabled = state.list.length === 0;
+        elements.exportButton.textContent = "导出图片";
+      }
+    }
+
+    async function buildTierImageBlob() {
+      const scale = 2;
+      const labelWidth = 180;
+      const cardWidth = 96;
+      const cardHeight = 144;
+      const gap = 12;
+      const padding = 16;
+      const headerHeight = 74;
+      const rowGap = 2;
+      const exportItems = state.list
+        .map(normalizeAnimeItem)
+        .filter((item) => getValidTierId(item.tier) !== UNASSIGNED_TIER);
+      const columns = Math.max(4, Math.min(8, Math.ceil(Math.sqrt(Math.max(exportItems.length, 1) * 1.3))));
+      const boardWidth = labelWidth + padding * 2 + columns * cardWidth + (columns - 1) * gap;
+      const rowHeights = TIERS.map((tier) => {
+        const count = exportItems.filter((item) => getValidTierId(item.tier) === tier.id).length;
+        const rows = Math.max(1, Math.ceil(count / columns));
+        return padding * 2 + rows * cardHeight + (rows - 1) * gap;
+      });
+      const width = boardWidth;
+      const height = headerHeight + rowHeights.reduce((sum, value) => sum + value, 0) + rowGap * (TIERS.length - 1);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+
+      const ctx = canvas.getContext("2d");
+      ctx.scale(scale, scale);
+      ctx.fillStyle = "#f5f3ed";
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = "#111827";
+      ctx.font = "800 30px Microsoft YaHei, Arial, sans-serif";
+      ctx.fillText("我的动漫从夯到拉排行", 18, 44);
+      ctx.fillStyle = "#657080";
+      ctx.font = "14px Microsoft YaHei, Arial, sans-serif";
+      ctx.fillText(`已分档 ${exportItems.length} 部 · ${new Intl.DateTimeFormat("zh-CN").format(new Date())}`, 20, 66);
+
+      let y = headerHeight;
+      for (let tierIndex = 0; tierIndex < TIERS.length; tierIndex += 1) {
+        const tier = TIERS[tierIndex];
+        const tierItems = exportItems.filter((item) => getValidTierId(item.tier) === tier.id);
+        const rowHeight = rowHeights[tierIndex];
+
+        ctx.fillStyle = tier.color;
+        ctx.fillRect(0, y, labelWidth, rowHeight);
+        ctx.fillStyle = "#111827";
+        ctx.font = "900 26px Microsoft YaHei, Arial, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        wrapCanvasText(ctx, tier.label, labelWidth / 2, y + rowHeight / 2, labelWidth - 24, 30);
+
+        ctx.fillStyle = "#f8fafc";
+        ctx.fillRect(labelWidth, y, width - labelWidth, rowHeight);
+
+        for (let index = 0; index < tierItems.length; index += 1) {
+          const item = tierItems[index];
+          const col = index % columns;
+          const row = Math.floor(index / columns);
+          const x = labelWidth + padding + col * (cardWidth + gap);
+          const itemY = y + padding + row * (cardHeight + gap);
+          await drawExportCard(ctx, item, x, itemY, cardWidth, cardHeight);
+        }
+
+        y += rowHeight + rowGap;
+      }
+
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Canvas export failed"));
+          }
+        }, "image/png");
+      });
+    }
+
+    async function drawExportCard(ctx, item, x, y, width, height) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(x, y, width, height);
+      ctx.strokeStyle = "rgba(17, 24, 39, 0.16)";
+      ctx.strokeRect(x, y, width, height);
+
+      const imageHeight = Math.round(width * 1.5);
+      try {
+        const image = await loadImageForCanvas(item.image);
+        drawCoverImage(ctx, image, x, y, width, imageHeight);
+      } catch (error) {
+        ctx.fillStyle = "#e5e7eb";
+        ctx.fillRect(x, y, width, imageHeight);
+        ctx.fillStyle = "#657080";
+        ctx.font = "12px Microsoft YaHei, Arial, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("封面", x + width / 2, y + imageHeight / 2);
+      }
+
+      ctx.fillStyle = "#111827";
+      ctx.font = "700 11px Microsoft YaHei, Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      wrapCanvasText(ctx, item.title, x + 6, y + imageHeight + 6, width - 12, 15, 2);
+    }
+
+    function loadImageForCanvas(src) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.crossOrigin = "anonymous";
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = getCanvasImageUrl(src);
+      });
+    }
+
+    function getCanvasImageUrl(src) {
+      if (!src) return "";
+      return `https://wsrv.nl/?url=${encodeURIComponent(src)}&w=192&h=288&fit=cover`;
+    }
+
+    function drawCoverImage(ctx, image, x, y, width, height) {
+      const sourceRatio = image.naturalWidth / image.naturalHeight;
+      const targetRatio = width / height;
+      let sourceWidth = image.naturalWidth;
+      let sourceHeight = image.naturalHeight;
+      let sourceX = 0;
+      let sourceY = 0;
+
+      if (sourceRatio > targetRatio) {
+        sourceWidth = image.naturalHeight * targetRatio;
+        sourceX = (image.naturalWidth - sourceWidth) / 2;
+      } else {
+        sourceHeight = image.naturalWidth / targetRatio;
+        sourceY = (image.naturalHeight - sourceHeight) / 2;
+      }
+
+      ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
+    }
+
+    function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight, maxLines = Infinity) {
+      const words = Array.from(String(text));
+      const lines = [];
+      let line = "";
+
+      for (const word of words) {
+        const testLine = line + word;
+        if (ctx.measureText(testLine).width > maxWidth && line) {
+          lines.push(line);
+          line = word;
+          if (lines.length >= maxLines) break;
+        } else {
+          line = testLine;
+        }
+      }
+
+      if (line && lines.length < maxLines) lines.push(line);
+
+      const startY = ctx.textBaseline === "middle" ? y - ((lines.length - 1) * lineHeight) / 2 : y;
+      for (let index = 0; index < lines.length; index += 1) {
+        const suffix = index === maxLines - 1 && words.join("") !== lines.join("") ? "…" : "";
+        ctx.fillText(lines[index] + suffix, x, startY + index * lineHeight);
       }
     }
 
@@ -1249,6 +1682,27 @@
       event.currentTarget.classList.add("dragging");
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData("text/plain", state.activeDragId);
+    }
+
+    function handleTierDragOver(event) {
+      event.preventDefault();
+      event.currentTarget.classList.add("drop-target");
+    }
+
+    function handleTierDragLeave(event) {
+      event.currentTarget.classList.remove("drop-target");
+    }
+
+    function handleTierDrop(event) {
+      event.preventDefault();
+      event.currentTarget.classList.remove("drop-target");
+
+      if (!state.activeDragId) return;
+
+      const fromIndex = state.list.findIndex((item) => item.uid === state.activeDragId);
+      if (fromIndex === -1) return;
+
+      moveAnimeToTier(fromIndex, event.currentTarget.dataset.tier);
     }
 
     function handleDragOver(event) {
@@ -1277,8 +1731,11 @@
 
     function handleDragEnd() {
       state.activeDragId = null;
-      document.querySelectorAll(".rank-card").forEach((card) => {
+      document.querySelectorAll(".rank-card, .tier-card").forEach((card) => {
         card.classList.remove("dragging", "drop-target");
+      });
+      document.querySelectorAll(".tier-items").forEach((row) => {
+        row.classList.remove("drop-target");
       });
     }
 
